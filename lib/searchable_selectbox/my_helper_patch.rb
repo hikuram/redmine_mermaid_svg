@@ -11,10 +11,10 @@ module SearchableSelectbox
     module InstanceMethods
       # Run replaceSelect2(); when remove_block.js.erb
       def block_select_tag(user)
-        super(user) +
-        javascript_tag do
-          '$(function(){replaceSelect2();});'
-        end
+        tag = super(user)
+        return tag unless Setting.enabled_redmica_ui_extension_feature?('searchable_selectbox')
+
+        tag + javascript_tag { '$(function(){replaceSelect2();});' }
       end
     end
   end
