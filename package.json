@@ -1,6 +1,5 @@
 {
-  "dependencies": {},
   "devDependencies": {
-    "playwright": "^1.40.1"
+    "playwright": "1.58.1"
   }
 }
