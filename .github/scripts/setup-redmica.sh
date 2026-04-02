@@ -45,9 +45,9 @@ apt-get update && apt-get install -y ca-certificates curl gnupg
 curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
 apt-get update && apt-get install nodejs -y
-npm install playwright
-npx playwright install chromium
-npx playwright install-deps
+npm --prefix plugins/redmica_ui_extension install
+npx --prefix plugins/redmica_ui_extension playwright install chromium
+npx --prefix plugins/redmica_ui_extension playwright install-deps
 
 # PDFのサムネイル作成テストを成功させるため
 sed -i 's/^.*policy.*coder.*none.*PDF.*//' /etc/ImageMagick-6/policy.xml
