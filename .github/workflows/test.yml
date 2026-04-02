@@ -2,9 +2,13 @@ name: Test
 
 on:
   push:
+    branches:
+      - master
+      - 'dev/*'
+  pull_request:
   workflow_dispatch:
   schedule:
-    - cron: "0 23 * * 0-4" # 月〜金 JST 08:00
+    - cron: "0 23 * * 0-4" # 08:00 JST, Monday to Friday
 
 env:
   PLUGIN_PATH: plugins/redmica_ui_extension
