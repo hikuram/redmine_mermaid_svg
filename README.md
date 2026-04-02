@@ -66,11 +66,14 @@ $ git clone https://github.com/redmica/redmica_ui_extension.git /path/to/redmine
 ```
 ## Test
 
+Run the following commands from your Redmine root:
+
 ```
 $ # for system test
-$ npm install playwright
-$ npx playwright install chromium
-$ npx playwright install-deps
+$ bundle install
+$ npm --prefix plugins/redmica_ui_extension install
+$ npx --prefix plugins/redmica_ui_extension playwright install chromium
+$ npx --prefix plugins/redmica_ui_extension playwright install-deps
 $ RAILS_ENV=test bundle exec rake test TEST=plugins/redmica_ui_extension/test
 ```
 
