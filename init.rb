@@ -3,7 +3,6 @@
 require_relative 'init_redmica_ui_extension'
 
 Redmine::Plugin.register :redmica_ui_extension do
-  requires_redmine version_or_higher: '4.1'
   name 'RedMica UI extension'
   author 'Far End Technologies Corporation'
   description 'This plugin adds useful UI improvements.'
