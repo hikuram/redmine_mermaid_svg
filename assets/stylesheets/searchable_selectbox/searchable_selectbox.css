@@ -73,7 +73,7 @@ fieldset#filters td.values .select2-container--default {
   outline: none;
 }
 li.select2-results__option--highlighted[role="option"][aria-selected] {
-  background-color: #759FC2;
+  background-color: var(--oc-blue-7, #1c7ed6);
   color: #fff;
 }
 .select2-dropdown {
