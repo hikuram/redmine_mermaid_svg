@@ -1,96 +1,80 @@
-# RedMica UI extension
+# Redmine Mermaid SVG
 
-This plugin adds useful UI improvements that are difficult to implement in Redmine itself.
+A small Redmine plugin that adds a `{{mermaid ...}}` block macro and an
+**SVG保存** button to each rendered diagram.
 
-## Features
+This plugin is a reduced derivative of the Mermaid macro in
+[redmica/redmica_ui_extension](https://github.com/redmica/redmica_ui_extension).
+It intentionally contains no settings screen, routes, controllers, database
+migrations, model patches, helper patches, attachment preview, searchable
+select box, or burndown chart.
 
-### 1. Make the selection box searchable
+## Requirements
 
-Change the Redmine selection box to searchable.  
-Replace Redmine selectbox with [Select2 4.0.12](https://select2.org/).  
-This feature is based on the redmine_searchable_selectbox plugin(https://github.com/farend/redmine_searchable_selectbox).
+- Redmine 6.0 or later
+- A modern browser supported by Mermaid 11.16.0
 
-Demo:  
-| Issues filter | New issue |
-| ------------- | --------- |
-| <kbd><img src="https://github.com/redmica/redmica_ui_extension/blob/images/demo_filters.gif" /></kbd> | <kbd><img src="https://github.com/redmica/redmica_ui_extension/blob/images/demo_new_issue.gif" /></kbd> |
-
-### 2. Display Burndown Chart on version detail
-
-Display a burndown chart on the version detail page based on the information in the version issues.
-
-<kbd><img src="https://github.com/redmica/redmica_ui_extension/blob/images/demo-burndown-chart.png" /></kbd>
-
-[Explanation of Burndown Chart - Data represented in the chart (./data-represented-in-the-chart.md)](/data-represented-in-the-chart.md)
-
-### 3. You can disable each feature on the plugin settings page
-
-Administration > Plugins > RedMica UI extension configure
-
-<kbd><img src="https://github.com/redmica/redmica_ui_extension/blob/images/plugin-settings.png" /></kbd>
-
-### 4. Add a mermaid macro to use the mermaid syntax in the wiki
-
-Add a mermaid macro to convert text written in [Mermaid syntax](https://mermaid-js.github.io/mermaid/#/./n00b-syntaxReference) into a diagram.  
-You can use the mermaid macro by writing the following in issues, wiki pages, etc.
-
-```
-{{mermaid
-erDiagram
-    CUSTOMER ||--o{ ORDER : places
-    ORDER ||--|{ LINE-ITEM : contains
-    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses
-}}
-```
-
-**Warning: Mermaid macro does not support Internet Explorer.**
-
-<kbd><img src="https://github.com/redmica/redmica_ui_extension/blob/images/demo_mermaid_macro.png" /></kbd>
-
-### 5. Preview Attachment
-
-Preview attachments without screen transitions.  
-The following attachments can be previewed.  
-Image, Audio, Video, PDF
-
-<kbd><img src="https://github.com/redmica/redmica_ui_extension/blob/images/demo_preview_attachment.gif" /></kbd>
+Redmine 7.0 is within the declared version range, but this package has not been
+run against the target Redmine installation as part of this build.
 
 ## Installation
 
-Place the plugin source at Redmine plugins directory.
+1. Extract the directory as:
 
-`git clone` or copy an unarchived plugin to plugins/redmica_ui_extension on your Redmine installation path.
+   ```text
+   REDMINE_ROOT/plugins/redmine_mermaid_svg
+   ```
 
-```
-$ git clone https://github.com/redmica/redmica_ui_extension.git /path/to/redmine/plugins/redmica_ui_extension
-```
-## Test
+2. Restart Redmine.
 
-Run the following commands from your Redmine root:
+There are no migrations and no additional gems.
 
-```
-$ # for system test
-$ bundle install
-$ npm --prefix plugins/redmica_ui_extension install
-$ npx --prefix plugins/redmica_ui_extension playwright install chromium
-$ npx --prefix plugins/redmica_ui_extension playwright install-deps
-$ RAILS_ENV=test bundle exec rake test TEST=plugins/redmica_ui_extension/test
+For a Docker image, a typical addition is:
+
+```dockerfile
+COPY --chown=redmine:redmine ./plugins/redmine_mermaid_svg \
+    /usr/src/redmine/plugins/redmine_mermaid_svg
 ```
 
-## Libraries included
+## Usage
 
-- Select2 4.0.13
-  - LICENSE: https://github.com/select2/select2/blob/master/LICENSE.md
-- mermaid.js 11.12.1
-  - LICENSE: https://github.com/mermaid-js/mermaid/blob/master/LICENSE
-  - mermaid.js includes code from DOMPurify, which is licensed under the Mozilla Public License Version 2.0 (MPL 2.0). See `LICENSE.MPL-2.0` for details.
-- BigPicture.js 2.6.1
-  - LICENSE: https://github.com/henrygd/bigpicture/blob/master/LICENSE
+```text
+{{mermaid
+flowchart LR
+  A[Start] --> B[Finish]
+}}
+```
 
-## LICENSE
+The diagram is rendered in issue descriptions, journals, wiki pages, and other
+places where Redmine expands wiki macros. New content inserted by preview or
+AJAX is detected with a scoped DOM observer and rendered automatically.
 
-GNU General Public License v2.0 (GPLv2)
+## SVG export
 
-## Maintainer
+After rendering, each diagram receives an **SVG保存** button. Export is entirely
+client-side:
 
-[Far End Technologies Corporation](https://www.farend.co.jp/)
+- no download route or controller is added;
+- no diagram is sent back to the server;
+- the rendered SVG is cloned and serialized in the browser;
+- percentage dimensions are replaced with the diagram `viewBox` dimensions
+  when needed for use as a standalone SVG file.
+
+The exported SVG may contain `foreignObject` elements when Mermaid uses HTML
+labels. Modern browsers support them, while some older SVG editors or Office
+versions may render them differently.
+
+## Security-related choices
+
+- Mermaid is bundled locally; no CDN is contacted.
+- Mermaid is initialized with `securityLevel: 'strict'`.
+- `maxTextSize` is set to 50,000 characters.
+- `maxEdges` is set to 1,000.
+- No global prototypes or Redmine helper methods are modified.
+- The macro body is passed through Rails `content_tag`, which HTML-escapes the
+  source text before Mermaid reads it from the DOM.
+
+## Origin and license
+
+The Redmine plugin code is distributed under GNU GPL v2. See `LICENSE` and
+`THIRD_PARTY_NOTICES.md`.

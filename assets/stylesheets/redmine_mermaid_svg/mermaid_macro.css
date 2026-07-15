@@ -1,0 +1,49 @@
+.mermaid-macro {
+  margin: 1em 0;
+}
+
+/* Hide source text until Mermaid has converted it to SVG. */
+.mermaid:not([data-processed="true"]) {
+  display: none;
+}
+
+/* Keep rendered diagrams responsive in Redmine. */
+.mermaid-macro .mermaid svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* Work around Mermaid Gantt task-height rendering issues. */
+.mermaid-macro .mermaid .task {
+  height: 20px;
+}
+
+.mermaid-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.35rem;
+}
+
+.mermaid-svg-download {
+  min-height: 1.8rem;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  background: #f6f6f6;
+  color: #333;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.mermaid-svg-download:hover {
+  background: #eee;
+}
+
+.mermaid-svg-download:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
