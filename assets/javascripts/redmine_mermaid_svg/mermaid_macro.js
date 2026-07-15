@@ -4,11 +4,26 @@
   const DIAGRAM_SELECTOR = '.mermaid-macro .mermaid';
   const TOOLBAR_CLASS = 'mermaid-toolbar';
   const RENDERING_ATTRIBUTE = 'data-mermaid-rendering';
+  const DISPLAY_CONFIG = {
+    startOnLoad: false,
+    securityLevel: 'strict',
+    maxTextSize: 50000,
+    maxEdges: 1000
+  };
+  const OFFICE_EXPORT_CONFIG = {
+    ...DISPLAY_CONFIG,
+    htmlLabels: false,
+    flowchart: {
+      htmlLabels: false
+    }
+  };
   const pendingElements = new Set();
+  const diagramSources = new WeakMap();
 
   let initialized = false;
   let renderScheduled = false;
   let renderingQueue = Promise.resolve();
+  let exportSequence = 0;
 
   function initializeMermaid() {
     if (initialized) {
@@ -19,12 +34,7 @@
       return false;
     }
 
-    globalThis.mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: 'strict',
-      maxTextSize: 50000,
-      maxEdges: 1000
-    });
+    globalThis.mermaid.initialize(DISPLAY_CONFIG);
 
     initialized = true;
     return true;
@@ -86,6 +96,10 @@
       element.setAttribute(RENDERING_ATTRIBUTE, 'true');
 
       try {
+        if (!diagramSources.has(element)) {
+          diagramSources.set(element, element.textContent || '');
+        }
+
         await globalThis.mermaid.run({
           nodes: [element],
           suppressErrors: true
@@ -115,26 +129,42 @@
     button.type = 'button';
     button.className = 'mermaid-svg-download';
     button.textContent = 'SVG保存';
-    button.title = 'Mermaid図をSVG形式で保存';
+    button.title = 'PowerPoint互換のSVG形式で保存';
     button.setAttribute('aria-label', button.title);
 
     button.addEventListener('click', () => {
-      downloadMermaidSvg(element);
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+
+      renderingQueue = renderingQueue
+        .then(() => downloadOfficeCompatibleSvg(element))
+        .catch((error) => {
+          console.error('Failed to export Mermaid SVG:', error);
+          window.alert('SVGの保存に失敗しました。ブラウザーのコンソールを確認してください。');
+        })
+        .finally(() => {
+          button.disabled = false;
+          button.removeAttribute('aria-busy');
+        });
     });
 
     toolbar.appendChild(button);
     wrapper.insertBefore(toolbar, element);
   }
 
-  function downloadMermaidSvg(element) {
-    const sourceSvg = element.querySelector('svg');
+  async function downloadOfficeCompatibleSvg(element) {
+    const source = diagramSources.get(element);
 
-    if (!sourceSvg) {
-      return;
+    if (!source) {
+      throw new Error('The original Mermaid source is not available.');
     }
 
-    const svg = sourceSvg.cloneNode(true);
+    const svg = await renderOfficeCompatibleSvg(source);
     prepareStandaloneSvg(svg);
+
+    if (svg.querySelector('foreignObject')) {
+      throw new Error('Office-compatible export still contains foreignObject elements.');
+    }
 
     const serializedSvg =
       '<?xml version="1.0" encoding="UTF-8"?>\n' +
@@ -155,6 +185,40 @@
     link.remove();
 
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  }
+
+  async function renderOfficeCompatibleSvg(source) {
+    const exportSource = forceSvgTextLabels(source);
+    const renderId = `mermaid-office-export-${Date.now()}-${exportSequence += 1}`;
+
+    globalThis.mermaid.initialize(OFFICE_EXPORT_CONFIG);
+
+    try {
+      const result = await globalThis.mermaid.render(renderId, exportSource);
+      const documentNode = new DOMParser().parseFromString(
+        result.svg,
+        'image/svg+xml'
+      );
+      const parserError = documentNode.querySelector('parsererror');
+
+      if (parserError) {
+        throw new Error(parserError.textContent || 'Failed to parse exported SVG.');
+      }
+
+      return document.importNode(documentNode.documentElement, true);
+    } finally {
+      globalThis.mermaid.initialize(DISPLAY_CONFIG);
+    }
+  }
+
+  function forceSvgTextLabels(source) {
+    const htmlLabelsPattern = /(["']?htmlLabels["']?\s*:\s*)true\b/gi;
+    const sourceWithOverrides = source.replace(htmlLabelsPattern, '$1false');
+
+    return (
+      '%%{init: {"htmlLabels":false,"flowchart":{"htmlLabels":false}}}%%\n' +
+      sourceWithOverrides
+    );
   }
 
   function prepareStandaloneSvg(svg) {
