@@ -1,7 +1,7 @@
 # Redmine Mermaid SVG
 
-A small Redmine plugin that adds a `{{mermaid ...}}` block macro and an
-**SVG保存** button to each rendered diagram.
+A small Redmine plugin that adds a `{{mermaid ...}}` block macro and
+Redmine's standard download icon to each rendered diagram.
 
 This plugin is a reduced derivative of the Mermaid macro in
 [redmica/redmica_ui_extension](https://github.com/redmica/redmica_ui_extension).
@@ -51,18 +51,27 @@ AJAX is detected with a scoped DOM observer and rendered automatically.
 
 ## SVG export
 
-After rendering, each diagram receives an **SVG保存** button. Export is entirely
+After rendering, each diagram exposes Redmine's standard download icon in the
+upper-right corner. On mouse/trackpad devices it appears only while the diagram
+is hovered or the control has keyboard focus; on touch devices it remains
+visible. The hover behavior is implemented entirely in CSS. Export is entirely
 client-side:
 
 - no download route or controller is added;
 - no diagram is sent back to the server;
-- the rendered SVG is cloned and serialized in the browser;
+- the original Mermaid source is retained in browser memory;
+- export re-renders the diagram with `htmlLabels: false`;
+- labels are emitted as native SVG `text` and `tspan` elements instead of
+  XHTML inside `foreignObject`;
 - percentage dimensions are replaced with the diagram `viewBox` dimensions
   when needed for use as a standalone SVG file.
 
-The exported SVG may contain `foreignObject` elements when Mermaid uses HTML
-labels. Modern browsers support them, while some older SVG editors or Office
-versions may render them differently.
+This improves compatibility with Microsoft PowerPoint and other SVG consumers
+that do not render `foreignObject`. The exported layout can differ slightly
+from the on-screen diagram because the browser view continues to use the
+diagram's normal HTML-label configuration. Markdown bold labels are retained.
+CSS selectors that specifically target HTML elements such as `.nodeLabel p`
+do not apply to the Office-compatible export.
 
 ## Security-related choices
 
