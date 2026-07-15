@@ -117,21 +117,20 @@
   function addSvgDownloadButton(element) {
     const wrapper = element.closest('.mermaid-macro');
     const svg = element.querySelector('svg');
+    const toolbar = wrapper?.querySelector(`:scope > .${TOOLBAR_CLASS}`);
+    const button = toolbar?.querySelector('.mermaid-svg-download');
 
-    if (!wrapper || !svg || wrapper.querySelector(`:scope > .${TOOLBAR_CLASS}`)) {
+    if (!wrapper || !svg || !toolbar || !button) {
       return;
     }
 
-    const toolbar = document.createElement('div');
-    toolbar.className = TOOLBAR_CLASS;
+    wrapper.classList.add('mermaid-download-ready');
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'mermaid-svg-download';
-    button.textContent = 'SVG保存';
-    button.title = 'PowerPoint互換のSVG形式で保存';
-    button.setAttribute('aria-label', button.title);
+    if (button.dataset.mermaidDownloadBound === 'true') {
+      return;
+    }
 
+    button.dataset.mermaidDownloadBound = 'true';
     button.addEventListener('click', () => {
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
@@ -140,16 +139,13 @@
         .then(() => downloadOfficeCompatibleSvg(element))
         .catch((error) => {
           console.error('Failed to export Mermaid SVG:', error);
-          window.alert('SVGの保存に失敗しました。ブラウザーのコンソールを確認してください。');
+          window.alert('Failed to save the SVG. Check the browser console for details.');
         })
         .finally(() => {
           button.disabled = false;
           button.removeAttribute('aria-busy');
         });
     });
-
-    toolbar.appendChild(button);
-    wrapper.insertBefore(toolbar, element);
   }
 
   async function downloadOfficeCompatibleSvg(element) {
