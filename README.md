@@ -1,7 +1,7 @@
 # Redmine Mermaid SVG
 
-A small Redmine plugin that adds a `{{mermaid ...}}` block macro and
-Redmine's standard download icon to each rendered diagram.
+A small Redmine plugin that adds a `{{mermaid ...}}` block macro, SVG download,
+and PNG clipboard copy to each rendered diagram.
 
 This plugin is a reduced derivative of the Mermaid macro in
 [redmica/redmica_ui_extension](https://github.com/redmica/redmica_ui_extension).
@@ -13,6 +13,8 @@ select box, or burndown chart.
 
 - Redmine 6.0 or later
 - A modern browser supported by Mermaid 11.16.0
+- HTTPS or localhost for copying PNG images to the clipboard
+- Browser support for the asynchronous image Clipboard API
 
 Redmine 7.0 is within the declared version range, but this package has not been
 run against the target Redmine installation as part of this build.
@@ -49,29 +51,43 @@ The diagram is rendered in issue descriptions, journals, wiki pages, and other
 places where Redmine expands wiki macros. New content inserted by preview or
 AJAX is detected with a scoped DOM observer and rendered automatically.
 
-## SVG export
+## Export controls
 
-After rendering, each diagram exposes Redmine's standard download icon in the
-upper-right corner. On mouse/trackpad devices it appears only while the diagram
-is hovered or the control has keyboard focus; on touch devices it remains
-visible. The hover behavior is implemented entirely in CSS. Export is entirely
-client-side:
+After rendering, each diagram exposes two Redmine-style icon buttons in the
+upper-right corner. On mouse/trackpad devices they appear only while the diagram
+is hovered or either control has keyboard focus; on touch devices they remain
+visible. The hover behavior is implemented entirely in CSS.
+
+### Download SVG
+
+The download icon saves a clone of the SVG currently displayed in Redmine.
+This preserves the diagram's normal Mermaid configuration, including
+`htmlLabels: true`, `foreignObject` labels, Markdown formatting, and embedded
+theme CSS. The export is entirely client-side:
 
 - no download route or controller is added;
 - no diagram is sent back to the server;
-- the original Mermaid source is retained in browser memory;
-- export re-renders the diagram with `htmlLabels: false`;
-- labels are emitted as native SVG `text` and `tspan` elements instead of
-  XHTML inside `foreignObject`;
 - percentage dimensions are replaced with the diagram `viewBox` dimensions
   when needed for use as a standalone SVG file.
 
-This improves compatibility with Microsoft PowerPoint and other SVG consumers
-that do not render `foreignObject`. The exported layout can differ slightly
-from the on-screen diagram because the browser view continues to use the
-diagram's normal HTML-label configuration. Markdown bold labels are retained.
-CSS selectors that specifically target HTML elements such as `.nodeLabel p`
-do not apply to the Office-compatible export.
+The SVG is intended for browsers and SVG-aware graphics software. Applications
+that do not support SVG `foreignObject`, including some Microsoft Office SVG
+workflows, may omit HTML-based labels.
+
+### Copy PNG to clipboard
+
+The adjacent copy icon rasterizes the displayed SVG and writes a transparent
+PNG image to the system clipboard. It preserves the browser-rendered HTML-label
+appearance without changing the Mermaid layout. The SVG is loaded through a
+self-contained data URL before canvas rendering so Chromium can export
+`foreignObject` content without tainting the canvas. PNG output uses a preferred
+2x scale and is automatically limited to 8192 pixels per side and 64 million
+pixels to reduce excessive browser memory use.
+
+Image clipboard access is available only in a secure browser context, normally
+HTTPS or localhost, and requires browser support for `ClipboardItem` with
+`image/png`. If the API is unavailable or permission is denied, the plugin
+shows an English error message and logs the underlying error to the console.
 
 ## Security-related choices
 
@@ -82,6 +98,7 @@ do not apply to the Office-compatible export.
 - No global prototypes or Redmine helper methods are modified.
 - The macro body is passed through Rails `content_tag`, which HTML-escapes the
   source text before Mermaid reads it from the DOM.
+- SVG download and PNG clipboard copy run entirely in the browser.
 
 ## Origin and license
 
