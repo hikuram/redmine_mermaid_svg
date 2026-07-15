@@ -6,7 +6,7 @@ require_relative 'lib/redmine_mermaid_svg/hook_listener'
 Redmine::Plugin.register :redmine_mermaid_svg do
   name 'Redmine Mermaid SVG'
   author 'Far End Technologies Corporation and derivative contributors'
-  description 'Adds a local Mermaid macro with PowerPoint-compatible SVG download.'
+  description 'Adds a local Mermaid macro with SVG download and PNG clipboard copy.'
   requires_redmine version_or_higher: '6.0'
   version '1.1.0'
   url 'https://github.com/redmica/redmica_ui_extension'
@@ -27,19 +27,30 @@ Redmine::WikiFormatting::Macros.register do
 
   macro :mermaid do |_obj, _args, text|
     diagram_id = "mermaid-#{SecureRandom.hex(10)}"
-    download_label = l(:button_download)
 
     content_tag(:div, class: 'mermaid-macro') do
       safe_join(
         [
           content_tag(:div, class: 'mermaid-toolbar') do
-            content_tag(
-              :button,
-              sprite_icon('download', icon_only: true),
-              type: 'button',
-              class: 'icon-only icon-download mermaid-svg-download',
-              title: download_label,
-              :'aria-label' => download_label
+            safe_join(
+              [
+                content_tag(
+                  :button,
+                  sprite_icon('download', icon_only: true),
+                  type: 'button',
+                  class: 'icon-only icon-download mermaid-export-button mermaid-svg-download',
+                  title: 'Download SVG',
+                  :'aria-label' => 'Download SVG'
+                ),
+                content_tag(
+                  :button,
+                  sprite_icon('copy-link', icon_only: true),
+                  type: 'button',
+                  class: 'icon-only icon-copy-link mermaid-export-button mermaid-png-copy',
+                  title: 'Copy PNG to clipboard',
+                  :'aria-label' => 'Copy PNG to clipboard'
+                )
+              ]
             )
           end,
           content_tag(:div, text, class: 'mermaid', id: diagram_id)
