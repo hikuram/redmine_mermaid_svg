@@ -1,4 +1,5 @@
 .mermaid-macro {
+  position: relative;
   margin: 1em 0;
 }
 
@@ -21,29 +22,80 @@
 }
 
 .mermaid-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.35rem;
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  z-index: 2;
+  display: none;
+  gap: 0.2rem;
+  margin: 0;
 }
 
-.mermaid-svg-download {
-  min-height: 1.8rem;
-  padding: 0.15rem 0.55rem;
+.mermaid-export-ready > .mermaid-toolbar {
+  display: flex;
+}
+
+.mermaid-export-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0;
   border: 1px solid #bbb;
   border-radius: 3px;
-  background: #f6f6f6;
+  background: rgba(246, 246, 246, 0.94);
   color: #333;
-  font: inherit;
-  font-size: 0.85rem;
-  line-height: 1.35;
+  line-height: 1;
   cursor: pointer;
 }
 
-.mermaid-svg-download:hover {
-  background: #eee;
+.mermaid-export-button:hover {
+  background: rgba(238, 238, 238, 0.98);
 }
 
-.mermaid-svg-download:focus-visible {
+.mermaid-export-button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
+}
+
+.mermaid-export-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.mermaid-png-copy.mermaid-copy-complete {
+  outline: 2px solid currentColor;
+  outline-offset: -3px;
+}
+
+/*
+ * On mouse/trackpad devices, keep the controls out of the way until the
+ * diagram is hovered or either button receives keyboard focus. This is
+ * CSS-only: no mousemove/mouseenter listeners are installed. Touch devices
+ * keep the controls visible because they do not have a reliable hover state.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .mermaid-export-ready > .mermaid-toolbar {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px);
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+
+  .mermaid-export-ready:hover > .mermaid-toolbar,
+  .mermaid-export-ready:focus-within > .mermaid-toolbar {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mermaid-export-ready > .mermaid-toolbar {
+    transition: none;
+  }
 }
